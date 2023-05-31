@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "otus-mlops-cdc-api"
+version = "0.1.0"
+description = ""
+authors = ["inna-tuzhikova <inna-tuzhikova@github.com>"]
+readme = "README.md"
+packages = [{include = "otus_mlops_cdc_api"}]
+
+[tool.poetry.dependencies]
+python = "~3.9.16"
+fastapi = "0.79.0"
+uvicorn = "0.18.2"
+python-dotenv = "0.21.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
