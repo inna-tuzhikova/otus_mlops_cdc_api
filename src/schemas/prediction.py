@@ -10,7 +10,3 @@ class ClassLabels(Enum):
 class Prediction(BaseModel):
     confidence: float
     class_label: ClassLabels
-
-
-class ImageToPredict(BaseModel):
-    num: int

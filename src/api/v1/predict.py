@@ -1,8 +1,8 @@
 from logging import getLogger
 
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 
-from schemas.prediction import Prediction, ImageToPredict
+from schemas.prediction import Prediction
 from services.prediction import prediction_service
 
 
@@ -14,7 +14,7 @@ router = APIRouter()
     '/predict',
     response_model=Prediction,
 )
-async def predict(image: ImageToPredict):
+async def predict(image: UploadFile):
     """Handler for user image category prediction"""
     prediction = await prediction_service.predict_image(image)
     return prediction

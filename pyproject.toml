@@ -11,6 +11,8 @@ python = "~3.9.16"
 fastapi = "0.79.0"
 uvicorn = "0.18.2"
 python-dotenv = "0.21.0"
+python-multipart = "0.0.6"
+aiofiles = "23.1.0"
 
 
 [tool.poetry.group.test.dependencies]
