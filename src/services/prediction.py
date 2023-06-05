@@ -1,9 +1,10 @@
+import io
 from pathlib import Path
 
 from fastapi import UploadFile
-import aiofiles
 import torch
-from torchvision.io import read_image
+from torchvision import transforms
+from PIL import Image
 
 from schemas.prediction import Prediction, ClassLabels
 
@@ -13,19 +14,18 @@ class PredictionService:
         self._model = ModelWrapper()
 
     async def predict_image(self, image: UploadFile) -> Prediction:
-        tmp_path = f'/home/inna/cdc_input'
         contents = await image.read()
-        async with aiofiles.open(tmp_path, mode='wb') as f:
-            await f.write(contents)
-        return self._model.predict_image(Path(tmp_path))
+        image = Image.open(io.BytesIO(contents))
+        return self._model.predict_image(image)
 
 
 class ModelWrapper:
     def __init__(self):
         self._model = torch.jit.load(self._model_path())
+        self._image_to_tensor = transforms.ToTensor()
 
-    def predict_image(self, path: Path) -> Prediction:
-        image = read_image(str(path))
+    def predict_image(self, image: Image) -> Prediction:
+        image = self._image_to_tensor(image)
         image = torch.unsqueeze(image, 0)
         probs = self._model(image)[0]
         result = self._decode_result(probs)
