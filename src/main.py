@@ -1,16 +1,22 @@
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import app_settings
 from api.v1 import predict
-
+from services.prediction import init_prediction_service
 
 app = FastAPI(
     title=app_settings.app_title,
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json'
 )
+
+
+@app.on_event('startup')
+def startup():
+    init_prediction_service()
+
 
 app.add_middleware(
     CORSMiddleware,

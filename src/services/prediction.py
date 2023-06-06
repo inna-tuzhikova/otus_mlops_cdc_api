@@ -49,4 +49,17 @@ class ModelWrapper:
         return Path(__file__).parent / 'scripted_predictor.pt'
 
 
-prediction_service = PredictionService()
+prediction_service = None
+
+
+def init_prediction_service():
+    global prediction_service
+    prediction_service = PredictionService()
+
+
+def get_prediction_service() -> PredictionService:
+    if prediction_service is None:
+        raise RuntimeError(
+            'Service is not ready, init it first with init_prediction_service'
+        )
+    return prediction_service
