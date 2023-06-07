@@ -29,7 +29,7 @@ class PredictionService:
             raise ValueError('Unable to analyze image')
         return prediction
 
-    def _prepare_image(self, image: Image):
+    def _prepare_image(self, image: Image) -> Image:
         """Converts non RGB image"""
         if image.getbands() != ('R', 'G', 'B'):
             image = image.convert('RGB')
