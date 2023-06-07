@@ -14,9 +14,26 @@ class PredictionService:
         self._model = ModelWrapper()
 
     async def predict_image(self, image: UploadFile) -> Prediction:
-        contents = await image.read()
-        image = Image.open(io.BytesIO(contents))
-        return self._model.predict_image(image)
+        try:
+            contents = await image.read()
+            image = Image.open(io.BytesIO(contents))
+        except:
+            raise ValueError('Cannot read image')
+        try:
+            image = self._prepare_image(image)
+        except:
+            raise ValueError('Cannot convert image to RGB')
+        try:
+            prediction = self._model.predict_image(image)
+        except:
+            raise ValueError('Unable to analyze image')
+        return prediction
+
+    def _prepare_image(self, image: Image):
+        """Converts non RGB image"""
+        if image.getbands() != ('R', 'G', 'B'):
+            image = image.convert('RGB')
+        return image
 
 
 class ModelWrapper:

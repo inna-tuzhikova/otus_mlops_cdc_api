@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from fastapi import APIRouter, UploadFile, Depends
+from fastapi import APIRouter, UploadFile, Depends, HTTPException, status
 
 from schemas.prediction import Prediction
 from services.prediction import PredictionService, get_prediction_service
@@ -18,5 +18,11 @@ async def predict(
     prediction_service: PredictionService = Depends(get_prediction_service)
 ):
     """Handler for user image category prediction"""
-    prediction = await prediction_service.predict_image(image)
+    try:
+        prediction = await prediction_service.predict_image(image)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
     return prediction
