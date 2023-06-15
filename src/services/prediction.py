@@ -1,17 +1,24 @@
 import io
+import os
 from pathlib import Path
+from logging import getLogger
 
 from fastapi import UploadFile
 import torch
 from torchvision import transforms
 from PIL import Image
+import mlflow
 
 from schemas.prediction import Prediction, ClassLabels
+from core.config import app_settings
+
+
+logger = getLogger(__name__)
 
 
 class PredictionService:
-    def __init__(self, model=None):
-        self._model = model or ModelWrapper()
+    def __init__(self, scripted_model_path: Path):
+        self._model = ModelWrapper(scripted_model_path)
 
     async def predict_image(self, image: UploadFile) -> Prediction:
         try:
@@ -37,8 +44,8 @@ class PredictionService:
 
 
 class ModelWrapper:
-    def __init__(self):
-        self._model = torch.jit.load(self._model_path())
+    def __init__(self, scripted_model_path):
+        self._model = torch.jit.load(scripted_model_path)
         self._image_to_tensor = transforms.ToTensor()
 
     def predict_image(self, image: Image) -> Prediction:
@@ -62,17 +69,38 @@ class ModelWrapper:
             confidence=cls_prob
         )
 
-    def _model_path(self):
-        # return Path(__file__).parent / 'scripted_predictor.pt'
-        return Path(__file__).parent.parent.parent / 'loaded/scripted_model.pt'
-
 
 prediction_service = None
 
 
-def init_prediction_service(model=None):
+def init_prediction_service() -> None:
     global prediction_service
-    prediction_service = PredictionService(model)
+
+    scripted_model_path = _fetch_model()
+    prediction_service = PredictionService(scripted_model_path)
+
+
+def _fetch_model() -> Path:
+    """Downloads model from mlflow server and saves it locally
+
+    Returns:
+        Path - path to fetched model
+    """
+    mlflow.set_tracking_uri(app_settings.mlflow_tracking_uri)
+    os.environ['MLFLOW_S3_ENDPOINT_URL'] = app_settings.mlflow_s3_endpoint_url
+    uri = (
+        f'models:'
+        f'/{app_settings.model_name}'
+        f'/{app_settings.model_target_stage.value}'
+    )
+    logger.info('Fetching model from MLFlow server...')
+    save_dir = mlflow.artifacts.download_artifacts(
+        artifact_uri=uri,
+        dst_path='current_model'
+    )
+    result = Path(save_dir) / 'scripted_model.pt'
+    logger.info('Fetched model from MLFlow server')
+    return result
 
 
 def get_prediction_service() -> PredictionService:
