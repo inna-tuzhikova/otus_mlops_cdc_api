@@ -10,8 +10,8 @@ from schemas.prediction import Prediction, ClassLabels
 
 
 class PredictionService:
-    def __init__(self):
-        self._model = ModelWrapper()
+    def __init__(self, model=None):
+        self._model = model or ModelWrapper()
 
     async def predict_image(self, image: UploadFile) -> Prediction:
         try:
@@ -63,15 +63,16 @@ class ModelWrapper:
         )
 
     def _model_path(self):
-        return Path(__file__).parent / 'scripted_predictor.pt'
+        # return Path(__file__).parent / 'scripted_predictor.pt'
+        return Path(__file__).parent.parent.parent / 'loaded/scripted_model.pt'
 
 
 prediction_service = None
 
 
-def init_prediction_service():
+def init_prediction_service(model=None):
     global prediction_service
-    prediction_service = PredictionService()
+    prediction_service = PredictionService(model)
 
 
 def get_prediction_service() -> PredictionService:
